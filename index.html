@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spring's Education | Helical Spring Fatigue Calculator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Spring's Education</p>
+        <h1>Helical spring fatigue calculator with Zimmerli data</h1>
+        <p class="hero-text">
+          Enter spring geometry, cyclic force, and tensile strength in SI or English units to calculate
+          the shear endurance limit, mean shear stress, and alternating shear stress for a helical spring.
+        </p>
+      </div>
+      <div class="formula-card">
+        <h2>Model used</h2>
+        <p><span class="math">K<sub>B</sub> = (4C + 2) / (4C - 3)</span></p>
+        <p><span class="math">&tau; = K<sub>B</sub>(8FD / &pi;d<sup>3</sup>)</span></p>
+        <p><span class="math">S<sub>su</sub> = 0.67 S<sub>ut</sub></span></p>
+        <p><span class="math">S<sub>se</sub> = S<sub>sa</sub> / (1 - S<sub>sm</sub>/S<sub>su</sub>)</span></p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel input-panel">
+        <h2>Inputs</h2>
+        <form id="spring-form" novalidate>
+          <div class="field-grid">
+            <label class="field">
+              <span>Unit system</span>
+              <select id="unitSystem">
+                <option value="si">SI</option>
+                <option value="english">English</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Surface condition</span>
+              <select id="surfaceCondition">
+                <option value="unpeened">Unpeened</option>
+                <option value="peened">Shot peened</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Wire diameter, <span id="wireUnitLabel">d (mm)</span></span>
+              <input id="wireDiameter" type="number" min="0" step="any" value="8">
+            </label>
+
+            <label class="field">
+              <span>Mean coil diameter, <span id="coilUnitLabel">D (mm)</span></span>
+              <input id="meanDiameter" type="number" min="0" step="any" value="64">
+            </label>
+
+            <label class="field">
+              <span>Minimum force, <span id="forceMinUnitLabel">Fmin (N)</span></span>
+              <input id="forceMin" type="number" step="any" value="150">
+            </label>
+
+            <label class="field">
+              <span>Maximum force, <span id="forceMaxUnitLabel">Fmax (N)</span></span>
+              <input id="forceMax" type="number" step="any" value="450">
+            </label>
+
+            <label class="field">
+              <span>Ultimate tensile strength, <span id="sutUnitLabel">Sut (MPa)</span></span>
+              <input id="sut" type="number" min="0" step="any" value="1650">
+            </label>
+
+            <label class="field">
+              <span>Cycles to display</span>
+              <input id="cycles" type="number" min="1" max="8" step="1" value="2">
+            </label>
+          </div>
+
+          <button class="primary-button" type="submit">Calculate</button>
+          <p id="message" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel results-panel">
+        <h2>Results</h2>
+        <div class="result-grid">
+          <article class="result-card">
+            <p class="result-label">Spring index</p>
+            <p id="resultIndex" class="result-value">8.00</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Bergstrasser factor</p>
+            <p id="resultKb" class="result-value">1.172</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Shear endurance limit</p>
+            <p id="resultSse" class="result-value">366.72 MPa</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Mean shear stress</p>
+            <p id="resultTauMean" class="result-value">111.96 MPa</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Alternating shear stress</p>
+            <p id="resultTauAlt" class="result-value">55.98 MPa</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Shear ultimate strength</p>
+            <p id="resultSsu" class="result-value">1105.50 MPa</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Goodman utilization</p>
+            <p id="resultGoodmanUsage" class="result-value">0.20</p>
+          </article>
+
+          <article class="result-card">
+            <p class="result-label">Fatigue safety factor</p>
+            <p id="resultSafetyFactor" class="result-value">5.00</p>
+          </article>
+        </div>
+
+        <div class="notes">
+          <h3>Zimmerli constants</h3>
+          <p id="zimmerliData">Unpeened: Ssa = 241 MPa, Ssm = 379 MPa</p>
+          <p class="note-text">Zimmerli values here are treated as the 10<sup>6</sup>-cycle fatigue reference points used for spring design.</p>
+          <p class="note-text">
+            The waveform below shows the applied spring force as a sinusoid built from the mean force and
+            force amplitude you entered.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <section class="panel chart-panel">
+      <div class="chart-header">
+        <div>
+          <h2>Sinusoidal cyclic loading</h2>
+          <p id="chartSubtitle">Force vs. time</p>
+        </div>
+        <div class="legend">
+          <span class="legend-swatch"></span>
+          <span>Applied force waveform</span>
+        </div>
+      </div>
+      <canvas id="waveCanvas" width="1200" height="420" aria-label="Sinusoidal force plot"></canvas>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="chart-header">
+        <div>
+          <h2>Goodman diagram (shear)</h2>
+          <p id="goodmanSubtitle">Alternating shear stress vs. mean shear stress</p>
+        </div>
+        <div class="legend">
+          <span class="legend-swatch goodman-line"></span>
+          <span>Goodman limit line</span>
+        </div>
+      </div>
+      <canvas id="goodmanCanvas" width="1200" height="420" aria-label="Goodman diagram"></canvas>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
